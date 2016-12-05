@@ -1,0 +1,4 @@
+name: TpsLogger
+main: de.guntram.bukkit.tpslogger.TpsLoggerPlugin
+version: "0.1"
+depend: [Essentials]
