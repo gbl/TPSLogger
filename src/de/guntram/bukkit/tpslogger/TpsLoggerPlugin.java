@@ -35,6 +35,18 @@ public class TpsLoggerPlugin extends JavaPlugin implements Runnable {
                        this, frequency, frequency);        
     }
     
+    @Override
+    public void onDisable() {
+        try {
+            FileWriter f=new FileWriter(outputFile);
+            f.write("0.0\n");
+            f.close();
+        } catch (IOException ex) {
+            logger.log(Level.SEVERE, "TPSLogger can't reset log file", ex);
+        }
+        
+    }
+    
 
     @Override
     public void run() {
