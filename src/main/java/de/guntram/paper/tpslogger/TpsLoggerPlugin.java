@@ -1,4 +1,4 @@
-package de.guntram.bukkit.tpslogger;
+package de.guntram.paper.tpslogger;
 
 
 import java.io.File;
@@ -17,6 +17,7 @@ public class TpsLoggerPlugin extends JavaPlugin {
     File outputFile;
     boolean failureReported;
     FloatingAverage avg1, avg5, avg15;
+    FloatingAverage mspt;
     long currentTimeInterval;
     int  tickCount;
     boolean firstPartialTick;
@@ -31,6 +32,7 @@ public class TpsLoggerPlugin extends JavaPlugin {
         avg1=new FloatingAverage(6);
         avg5=new FloatingAverage(5*6);
         avg15=new FloatingAverage(15*6);
+        mspt=null;
 
         currentTimeInterval=0;
         new BukkitRunnable(){
@@ -39,12 +41,23 @@ public class TpsLoggerPlugin extends JavaPlugin {
                 tick();
             }
         }.runTaskTimer(this, 100l, 1l);
+        
+        try {
+            Class.forName("com.destroystokyo.paper.event.server.ServerTickEndEvent");
+            mspt = new FloatingAverage(20*60);
+            getServer().getPluginManager().registerEvents(new MSPTLogger(mspt), this);
+        } catch (ClassNotFoundException ex) {
+            logger.warning("Paper server not detected, will not log mspt");
+        }
     }
     
     @Override
     public void onDisable() {
         try (FileWriter f = new FileWriter(outputFile)) {
             f.write("0.0\n0.0\n0.0\n");
+            if (mspt != null) {
+                f.write("MSPT:0.0\n");
+            }
         } catch (IOException ex) {
             logger.log(Level.SEVERE, "TPSLogger can't reset log file", ex);
         }
@@ -81,6 +94,9 @@ public class TpsLoggerPlugin extends JavaPlugin {
                         f.write(""+avg1.getAverage()/(millisPerInterval / 1000)+"\n"
                                   +avg5.getAverage()/(millisPerInterval / 1000)+"\n"
                                   +avg15.getAverage()/(millisPerInterval / 1000)+"\n");
+                        if (mspt != null) {
+                            f.write("MSPT:"+mspt.getAverage()+"\n");
+                        }
                         failureReported=false;
                     } catch (IOException ex) {
                         if (!failureReported) {
