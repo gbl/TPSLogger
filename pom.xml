@@ -28,7 +28,12 @@
 		    <version>1.15.2-R0.1-SNAPSHOT</version>
 		    <scope>provided</scope>
 		 </dependency>
-	</dependencies>
+        <dependency>
+            <groupId>org.knowm.xchart</groupId>
+            <artifactId>xchart</artifactId>
+            <version>3.6.5</version>
+        </dependency>
+    </dependencies>
 
 	<build>
 		<defaultGoal>clean install</defaultGoal>
