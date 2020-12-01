@@ -12,8 +12,10 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -121,4 +123,48 @@ public class LogData {
         }
         return data.get(i).getPlayers();
     };
+    
+    public Triple<List<Date>, List<Float>, List<String>> getEvents(long minTime, long maxTime) {
+        List<Date> dates = new ArrayList<>();
+        List<Float> values = new ArrayList<>();
+        List<String> notes = new ArrayList<>();
+        
+        int i=0;
+        while (i<data.size() && data.get(i).getTimestamp().getTime() < minTime) {
+            i++;
+        }
+        if (i == data.size()) {
+            return new Triple(dates, values, notes);
+        }
+        Map<String, WorldCoordinate> players = data.get(i).getPlayers();
+        i++;
+
+        while (i<data.size() && data.get(i).getTimestamp().getTime() <= maxTime) {
+            Map<String, WorldCoordinate> nextPlayers = data.get(i).getPlayers();
+            Set<String> allPlayers = new HashSet<>();
+            allPlayers.addAll(players.keySet());
+            allPlayers.addAll(nextPlayers.keySet());
+            int yPos = players.size();
+            for (String player: allPlayers) {
+                if (!players.containsKey(player)) {
+                    dates.add(data.get(i).getTimestamp());
+                    values.add((float)yPos++);
+                    notes.add("+ "+player);
+                }
+                else if (!nextPlayers.containsKey(player)) {
+                    dates.add(data.get(i).getTimestamp());
+                    values.add((float)yPos++);
+                    notes.add("- "+player);
+                }
+                else if (players.get(player).getWorldIndex() != nextPlayers.get(player).getWorldIndex()) {
+                    dates.add(data.get(i).getTimestamp());
+                    values.add((float)yPos++);
+                    notes.add("W "+player+" "+players.get(player).getWorld()+" -> "+nextPlayers.get(player).getWorld());
+                }
+            }
+            players = nextPlayers;
+            i++;
+        }
+        return new Triple(dates, values, notes);
+    }
 }
